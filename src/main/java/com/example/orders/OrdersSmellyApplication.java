@@ -8,6 +8,8 @@ public class OrdersSmellyApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(OrdersSmellyApplication.class, args);
+		System.out.println("Orders app started on 8080 (smelly)");
+
 	}
 
 }
