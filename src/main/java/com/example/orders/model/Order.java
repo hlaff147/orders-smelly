@@ -1,34 +1,74 @@
 package com.example.orders.model;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+/**
+ * Entidade Order refatorada para usar tipos apropriados:
+ * - BigDecimal para valores monetários (evita problemas de precisão com double)
+ * - LocalDate para datas (type-safe e thread-safe)
+ * - Enum para status (evita valores inválidos)
+ */
 public class Order {
-    private int id;
+    private Long id;
     private String customerName;
-    private double total; // BAD money
-    private String date; // BAD date handling
-    private String status = "NEW"; // NEW, PAID, FULFILLED
+    private BigDecimal total; // Corrigido: BigDecimal para dinheiro
+    private LocalDate orderDate; // Corrigido: LocalDate para data
+    private OrderStatus status = OrderStatus.NEW; // Corrigido: Enum para status
 
-    public Order(){}
+    public Order() {
+    }
 
-    public Order(int id, String customerName, double total, String date) {
+    public Order(Long id, String customerName, BigDecimal total, LocalDate orderDate) {
         this.id = id;
         this.customerName = customerName;
         this.total = total;
-        this.date = date;
+        this.orderDate = orderDate;
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-    public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
-    public double getTotal() { return total; }
-    public void setTotal(double total) { this.total = total; }
-    public String getDate() { return date; }
-    public void setDate(String date) { this.date = date; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public BigDecimal getTotal() {
+        return total;
+    }
+
+    public void setTotal(BigDecimal total) {
+        this.total = total;
+    }
+
+    public LocalDate getOrderDate() {
+        return orderDate;
+    }
+
+    public void setOrderDate(LocalDate orderDate) {
+        this.orderDate = orderDate;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
 
     @Override
     public String toString() {
-        return "Order{id=" + id + ", customer='" + customerName + "', total=" + total + ", date='" + date + "', status='" + status + "'}";
+        return "Order{id=" + id + ", customer='" + customerName + "', total=" + total +
+                ", orderDate=" + orderDate + ", status=" + status + "}";
     }
 }
