@@ -31,7 +31,7 @@ public class OrderRepository {
      * Gera ID automaticamente se for um novo pedido
      */
     public Order save(Order order) {
-        if (order.getId() == null) {
+        if (order.getId() == null || order.getId() == 0L) {
             order.setId(sequence.getAndIncrement());
         }
         database.put(order.getId(), order);

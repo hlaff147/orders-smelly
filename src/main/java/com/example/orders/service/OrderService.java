@@ -1,5 +1,13 @@
 package com.example.orders.service;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
 import com.example.orders.dto.CreateOrderRequest;
 import com.example.orders.dto.OrderResponse;
 import com.example.orders.mapper.OrderMapper;
@@ -7,14 +15,6 @@ import com.example.orders.model.Order;
 import com.example.orders.model.OrderStatus;
 import com.example.orders.repository.OrderRepository;
 import com.example.orders.util.LegacyFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Service refatorado com todas as boas práticas:
@@ -43,13 +43,13 @@ public class OrderService {
      * Cria um novo pedido com validações apropriadas
      */
     public OrderResponse createOrder(CreateOrderRequest request) {
-        logger.info("Criando pedido para cliente: {}, total: {}", 
-                   request.getCustomerName(), request.getTotal());
-        
+        logger.info("Criando pedido para cliente: {}, total: {}",
+                request.getCustomerName(), request.getTotal());
+
         // Validações já são feitas pelas anotações do DTO via @Valid
         Order order = orderMapper.toEntity(request);
         Order savedOrder = orderRepository.save(order);
-        
+
         logger.info("Pedido criado com ID: {}", savedOrder.getId());
         return orderMapper.toResponse(savedOrder);
     }
@@ -59,25 +59,25 @@ public class OrderService {
      */
     public BigDecimal applyCoupon(Long orderId, String coupon) {
         logger.info("Aplicando cupom '{}' ao pedido ID: {}", coupon, orderId);
-        
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado com ID: " + orderId));
-        
+
         BigDecimal discount = calculateDiscount(order.getTotal(), coupon);
         BigDecimal newTotal = order.getTotal().subtract(discount);
-        
+
         // Garante que o total não seja negativo
         if (newTotal.compareTo(BigDecimal.ZERO) < 0) {
             newTotal = BigDecimal.ZERO;
         }
-        
+
         order.setTotal(newTotal);
         orderRepository.save(order);
-        
+
         logger.info("Cupom aplicado. Novo total: {}", newTotal);
         return newTotal;
     }
-    
+
     /**
      * Calcula desconto baseado no cupom
      * Refatorado para ser mais flexível e testável
@@ -86,7 +86,7 @@ public class OrderService {
         if (coupon == null || coupon.trim().isEmpty()) {
             return BigDecimal.ZERO;
         }
-        
+
         try {
             if (coupon.startsWith("OFF")) {
                 int percentage = Integer.parseInt(coupon.replace("OFF", ""));
@@ -102,7 +102,7 @@ public class OrderService {
             logger.warn("Cupom inválido: {}", coupon);
             throw new IllegalArgumentException("Formato de cupom inválido: " + coupon);
         }
-        
+
         throw new IllegalArgumentException("Tipo de cupom não reconhecido: " + coupon);
     }
 
@@ -111,10 +111,10 @@ public class OrderService {
      */
     public String fulfillOrder(Long orderId) {
         logger.info("Processando entrega do pedido ID: {}", orderId);
-        
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado com ID: " + orderId));
-        
+
         // Validação de negócio: só entrega se estiver pago ou grátis
         if (order.getTotal().compareTo(BigDecimal.ZERO) <= 0) {
             logger.info("Pedido gratuito, liberando entrega diretamente");
@@ -123,18 +123,19 @@ public class OrderService {
             logger.info("Pedido pago, processando entrega");
             order.setStatus(OrderStatus.FULFILLED);
         } else {
-            throw new IllegalStateException("Pedido deve estar pago antes da entrega. Status atual: " + order.getStatus());
+            throw new IllegalStateException(
+                    "Pedido deve estar pago antes da entrega. Status atual: " + order.getStatus());
         }
-        
+
         orderRepository.save(order);
-        
+
         String formattedTotal = legacyFormat.formatMoney(order.getTotal());
         String result = formattedTotal + " | " + order.getStatus().getDescription();
-        
+
         logger.info("Entrega processada para pedido {}: {}", orderId, result);
         return result;
     }
-    
+
     /**
      * Retorna todos os pedidos
      */
@@ -142,7 +143,7 @@ public class OrderService {
         List<Order> orders = orderRepository.findAll();
         return orderMapper.toResponseList(orders);
     }
-    
+
     /**
      * Busca pedido por ID
      */
@@ -151,4 +152,3 @@ public class OrderService {
                 .map(orderMapper::toResponse);
     }
 }
-
